@@ -5,7 +5,7 @@ angular.module('app').controller('BaseTeamController', function($scope, $locatio
 
   $scope.team_promise = $api.v2.team($routeParams.id).then(function(response) {
     if (!response.success) {
-      $scope.error = response.data;
+      $scope.no_team_error = response.data.error;
     } else {
       $scope.team = angular.copy(response.data);
       $pageTitle.set($scope.team.name, "Teams");
@@ -19,7 +19,6 @@ angular.module('app').controller('BaseTeamController', function($scope, $locatio
   });
 
   $scope.setRelatedTrackers = function(team, trackers) {
-    console.log(trackers);
     $scope.ownedTrackers = [];
     $scope.usedTrackers = [];
 
@@ -36,9 +35,12 @@ angular.module('app').controller('BaseTeamController', function($scope, $locatio
 
     return team;
   };
-
-  $scope.set_team = function(team) {
-    $scope.team = team;
+ 
+  $scope.set_team = function(new_team) {
+    // Support v1/v2 response for team attributes; Add v1 attributes on original v2 team object
+    for (var k in new_team) {
+      $scope.team[k] = new_team[k];
+    }
   };
 
   /*****************************

@@ -84,10 +84,12 @@ angular.module('directives').directive('fundraiserTemplate', function($rootScope
           if (response.meta.success) {
             // replace cached copy of fundraiser with the now published one
             scope.fundraiser = angular.copy(response.data);
-
-            $location.url("/fundraisers/"+fundraiser.slug);
+            // Mixpanel track publish event
+            $analytics.publishFundraiser(fundraiser.team.id, fundraiser.id)
+            $location.url("teams/"+fundraiser.team.slug+"/fundraiser");
+            // $location.url("/fundraisers/"+fundraiser.slug);
           } else {
-            scope.error = "ERROR: " + response.data.error;
+            scope.error = response.data.error.join(", ");
           }
           return response.data;
         });
@@ -208,7 +210,7 @@ angular.module('directives').directive('fundraiserTemplate', function($rootScope
           $api.v2.fundraiserRewards(fundraiser.id, {
             order: '-amount'
           }).then(function(response) {
-            scope.rewards = angular.copy(response.data.slice(1,-1));
+            scope.rewards = angular.copy(response.data.slice(1));
           });
         }
       });

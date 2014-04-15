@@ -1,19 +1,48 @@
 'use strict';
 
-angular.module('fundraisers').controller('FundraiserEditController', function($scope, $routeParams, $location, $api) {
+angular.module('fundraisers').controller('FundraiserEditController', function($scope, $routeParams, $location, $api, $analytics) {
   // initialize fundraisers data and changes
   $scope.master = {};
   $scope.changes = {};
   $scope.rewards = [];
   $scope.master_rewards = [];
 
+  // Enable/disable rewards edit view
+  if ($routeParams.rewards_edit) {
+    $scope.rewards_edit = true;
+  }
+
+  $scope.fundraiserPromise = $api.fundraiser_get($routeParams.fundraiser_id).then(function(fundraiser) {
+
+    $scope.fundraiser = angular.copy(fundraiser);
+
+    // Not sure if these are used anywhere else besides fundraiserManageButtons, leave for now.
+    $scope.can_manage = $scope.fundraiser.person && $scope.current_person && $scope.fundraiser.person.id === $scope.current_person.id;
+    $scope.publishable = $scope.fundraiser.title && fundraiser.short_description && $scope.fundraiser.funding_goal && fundraiser.description;
+
+    return $scope.fundraiser;
+  });
+
   $scope.unsaved_changes = function() {
-    return !angular.equals($scope.master, $scope.changes);
+    // temporarily add master.image_url back to changes for comparison purposes
+    var test_master = angular.copy($scope.master);
+    var test_changes = angular.copy($scope.changes);
+
+    // no new image_url added, its safe to use the version from master
+    if (!test_changes.image_url) {
+      test_changes.image_url = test_master.image_url;
+    }
+
+    return !angular.equals(test_master, test_changes);
   };
 
-  $api.person_teams($scope.current_person.id).then(function(teams) {
-    $scope.teams = teams;
-    return teams;
+  $scope.$watch("current_person", function (current_person) {
+    if(current_person) {
+      $api.person_teams(current_person.id).then(function(teams) {
+        $scope.teams = teams;
+        return teams;
+      });
+    }
   });
 
   $scope.fundraiserPromise.then(function(fundraiser) {
@@ -36,16 +65,16 @@ angular.module('fundraisers').controller('FundraiserEditController', function($s
     return fundraiser;
   });
 
-  $scope.cancel = function() { $location.url("/fundraisers/"+$scope.master.slug); };
+  $scope.cancel = function() { $location.url("/teams/"+$routeParams.id+"/fundraisers/"+$scope.master.slug); };
 
   $scope.save = function() {
-    $api.fundraiser_update($routeParams.id, $scope.changes).then(function(response) {
+    $api.fundraiser_update($routeParams.fundraiser_id, $scope.changes).then(function(response) {
       if (response.error) {
         $scope.error = response.error;
 
         // TODO replace master reward with the current one
       } else {
-        $location.path("/fundraisers/"+$scope.master.slug);
+        $location.path("/teams/"+response.team.slug+"/fundraisers/"+$scope.master.slug);
       }
     });
   };
@@ -53,7 +82,7 @@ angular.module('fundraisers').controller('FundraiserEditController', function($s
   $scope.new_reward = {};
 
   $scope.create_reward = function(fundraiser) {
-    $api.reward_create($routeParams.id, $scope.new_reward, function(response) {
+    $api.reward_create($routeParams.fundraiser_id, $scope.new_reward, function(response) {
 
       if (response.meta.success) {
         // reset the new_reward model
@@ -67,17 +96,13 @@ angular.module('fundraisers').controller('FundraiserEditController', function($s
     });
   };
 
-  $scope.update_reward = function(reward) {
-    $api.reward_update($routeParams.id, reward.id, reward, function(response) {
+  $scope.update_reward = function(reward, fundraiser) {
+    $api.reward_update($routeParams.fundraiser_id, reward.id, reward, function(response) {
       if (response.meta.success) {
-        for (var i=0; i<$scope.rewards.length; i++) {
-          if ($scope.rewards[i].id === reward.id) {
-            // copy attributes from current reward to master
-            for (var k in $scope.rewards[i]) {
-              $scope.master_rewards[i][k] = $scope.rewards[i][k];
-            }
-            $scope.rewards[i].$is_open = false;
-            return;
+        for (var i=0; i<fundraiser.rewards.length; i++) {
+          if (fundraiser.rewards[i].id === response.data.id) {
+            fundraiser.rewards[i] = angular.copy(response.data);
+            fundraiser.rewards[i].$is_open = false;
           }
         }
       } else {
@@ -86,21 +111,21 @@ angular.module('fundraisers').controller('FundraiserEditController', function($s
     });
   };
 
-  $scope.cancel_reward_changes = function(reward) {
+  $scope.cancel_reward_changes = function(reward, fundraiser) {
     for (var i=0; i<$scope.master_rewards.length; i++) {
       if ($scope.master_rewards[i].id === reward.id) {
         // copy attributes from master reward to this one
         for (var k in $scope.master_rewards[i]) {
-          $scope.rewards[i][k] = $scope.master_rewards[i][k];
+          fundraiser.rewards[i][k] = $scope.master_rewards[i][k];
         }
-        $scope.rewards[i].$is_open = false;
+        fundraiser.rewards[i].$is_open = false;
         return;
       }
     }
   };
 
   $scope.destroy_reward = function(reward) {
-    $api.reward_destroy($routeParams.id, reward.id, function(response) {
+    $api.reward_destroy($routeParams.fundraiser_id, reward.id, function(response) {
       if (response.meta.success) {
 
         // traverse the cached rewards, and remove this one

@@ -184,6 +184,89 @@ angular.module('services').service('$api', function($http, $q, $cookieStore, $ro
         url: '/people',
         params: params || {}
       });
+    },
+
+    events: function(params) {
+      return this.call({
+        url: '/events',
+        params: params || {}
+      });
+    },
+
+    event: function(slug, params) {
+      return this.call({
+        url: '/events/'+slug,
+        params: params || {}
+      });
+    },
+
+    createEvent: function(params) {
+      return this.call({
+        url: '/events',
+        method: 'POST',
+        params: params || {}
+      });
+    },
+
+    updateEvent: function(slug, params) {
+      return this.call({
+        url: '/events/'+slug,
+        method: 'PUT',
+        params: params || {}
+      });
+    },
+
+    addresses: function(params) {
+      return this.call({
+        url: '/addresses',
+        params: params || {}
+      });
+    },
+
+    address: function(id, params) {
+      return this.call({
+        url: '/addresses/'+id,
+        params: params || {}
+      });
+    },
+
+    createAddress: function(params) {
+      return this.call({
+        url: '/addresses',
+        method: 'POST',
+        params: params || {}
+      });
+    },
+
+    updateAddress: function(id, params) {
+      return this.call({
+        url: '/addresses/'+id,
+        method: 'PATCH',
+        params: params || {}
+      });
+    },
+
+    deleteAddress: function(id, params) {
+      return this.call({
+        url: '/addresses/'+id,
+        method: 'DELETE',
+        params: params || {}
+      });
+    },
+
+    cashOuts: function(params) {
+      return this.call({
+        url: '/cash_outs',
+        params: params || {}
+      });
+    },
+
+    createCashOut: function(params) {
+      return this.call({
+        url: '/cash_outs',
+        method: 'POST',
+        params: params || {}
+      });
     }
 
   };

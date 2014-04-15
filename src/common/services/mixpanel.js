@@ -35,6 +35,10 @@ angular.module('app')
       this.track('Start Pledge', angular.extend({ type: '$direct' }, options||{}));
     };
 
+    this.teamPayinStart = function (options) {
+      this.track('Start Team Payin', angular.extend({ type: '$direct'}, options || {} ));
+    };
+
     // Show the Solution start form
     this.startSolutionCreate = function(issue_id, options) {
       this.track('Start Solution Create', angular.extend({ issue_id: issue_id }, options||{}));
@@ -134,6 +138,23 @@ angular.module('app')
       this.track('Vote Reject Bounty Claim', angular.extend({ bounty_claim_id: bounty_claim_id, issue_id: issue_id }, options||{}));
     };
 
+    // Fundraiser start draft -- Types are the referrer 'type'
+    // 1. Finish making new team and come to fundraiser_new form in team page
+    // 2. Select pre-existing team on '/fundraisers/new'
+    // 3. Click button on "Manage Fundraisers" page
+    // 4. Click 'Create Fundraiser' on admin dropdown on team page
+    this.startFundraiserDraft = function (team_id, options) {
+      this.track("Start Fundraiser Draft", angular.extend( {team_id: team_id}, options || {}));
+    };
+
+    this.createFundraiser = function (team_id, options) {
+      this.track("Create Fundraiser", angular.extend( {team_id: team_id}, options || {}));
+    };
+
+    this.publishFundraiser = function (team_id, fundraiser_id, options) {
+      this.track("Publish Fundraiser", angular.extend( {team_id: team_id, fundraiser_id: fundraiser_id}, options || {}));
+    };
+
   })
 
   // Fire Mixpanel events based on route
@@ -148,7 +169,7 @@ angular.module('app')
       } else if (!currentRoute.$$route) {
         $analytics.track(($location.path() === '/legacy' ? 'View Legacy' : 'View Not Found'), currentRoute.params);
       } else if (currentRoute.$$route.trackEvent !== false) {
-        $analytics.track(currentRoute.$$route.trackEvent || 'View Other', currentRoute.params);
+        $analytics.track(currentRoute.$$route.trackEvent || 'View Other', currentRoute.$$route.trackEventOptions || currentRoute.params);
       }
     });
   });

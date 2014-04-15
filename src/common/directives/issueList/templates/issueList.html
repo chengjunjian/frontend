@@ -77,7 +77,7 @@
   <tr ng-repeat="issue in issues">
     <td ng-if="$showTrackerImage">
       <a style="display:block;" ng-href="/trackers/{{issue.tracker.slug}}">
-        <img src="{{issue.tracker.image_url_small}}" style="max-height:20px;max-width:20px;" tooltip="{{ issue.tracker.display_name }}" tooltip-placement="left"/>
+        <img src="{{issue.tracker.small_image_url || issue.tracker.image_url_small}}" style="max-height:20px;max-width:20px;" tooltip="{{ issue.tracker.display_name }}" tooltip-placement="left"/>
       </a>
     </td>
     <td ng-if="$showTrackerName">
@@ -85,7 +85,9 @@
     </td>
     <td ng-if="$showIssueTitle">
       <a ng-href="/issues/{{issue.slug}}">
-        <i class="glyphicon glyphicon-briefcase text-success" ng-if="issue.has_active_solution" tooltip="A developer is working on a solution"></i>
+        <div ng-if="!hideSolutionActiveIcon">
+          <i class="glyphicon glyphicon-briefcase text-success" ng-if="issue.has_active_solution" tooltip="A developer is working on a solution"></i>
+        </div>
         {{issue.title}}
       </a>
       <span ng-show="issue.paid_out" class="label label-primary">paid out</span>
