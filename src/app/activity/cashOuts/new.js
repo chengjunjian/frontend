@@ -3,6 +3,9 @@
 angular.module('activity').
   controller('NewCashOutController', function($scope, $api, $window, $location, $q, AddressManager, countries, usStates) {
 
+    $scope.countries = countries;
+    $scope.usStates = usStates;
+
     $scope.cashOut = {
       type: 'paypal',
       amount: undefined,
@@ -14,15 +17,23 @@ angular.module('activity').
       usePermanentAddressAsMailing: true
     };
 
-    // Set default to amount to current account balance
-    $scope.$watch('current_person', function(person) {
-      if (person) {
-        $scope.cashOut.amount = parseFloat(person.account.balance);
-      }
-    });
+    $scope.updateAmounts = function() {
+      $api.v2.account({
+        cash_out: $scope.cashOut.amount
+      }).then(function(response) {
+        $scope.account = angular.copy(response.data);
+        $scope.account.balance = $window.parseFloat($scope.account.balance);
 
-    $scope.countries = countries;
-    $scope.usStates = usStates;
+        if ($scope.cashOut.amount > $scope.account.balance) {
+          $scope.cashOut.amount = $scope.account.balance;
+        }
+      });
+    };
+
+    $scope.disableSubmitButton = function() {
+      return !$scope.account ||
+        $scope.cashOut.amount !== ($scope.account.cash_out.amount + $scope.account.cash_out.fee - $scope.account.cash_out.fee_adjustment);
+    };
 
     // Model for checkbox. Use the permanent address as the mailing address
     $scope.usePermanentAddressAsMailing = true;
