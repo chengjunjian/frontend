@@ -71,6 +71,8 @@ angular.module('directives').directive('fundraiserTemplate', function($rootScope
 
       scope.$watch('fundraiser', function(fundraiser) {
         $rootScope.$watch('current_person', function(person) {
+          //isolated scope. Need to define current_person
+          scope.current_person = person;
           if (fundraiser && fundraiser.person && person) {
             scope.can_manage = fundraiser.person.id === person.id;
             scope.publishable = fundraiser.title && fundraiser.short_description && fundraiser.funding_goal && fundraiser.description;
@@ -85,7 +87,7 @@ angular.module('directives').directive('fundraiserTemplate', function($rootScope
             // replace cached copy of fundraiser with the now published one
             scope.fundraiser = angular.copy(response.data);
             // Mixpanel track publish event
-            $analytics.publishFundraiser(fundraiser.team.id, fundraiser.id)
+            $analytics.publishFundraiser(fundraiser.team.id, fundraiser.id);
             $location.url("teams/"+fundraiser.team.slug+"/fundraiser");
             // $location.url("/fundraisers/"+fundraiser.slug);
           } else {
