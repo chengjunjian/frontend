@@ -14,7 +14,7 @@ angular.module('activity').
     $scope.activeTemplate = $scope.templates[$scope.activeTemplateIndex];
 
     $scope.cashOut = {
-      type: undefined,
+      type: 'check',
       amount: undefined,
       paypal_address: undefined,
       bitcoin_address: undefined,
@@ -24,6 +24,8 @@ angular.module('activity').
       newAddress: {},
       newMailingAddress: {}
     };
+
+    $scope.usePermanentAddressAsMailing = true;
 
     $scope.$watch('current_person', function(person) {
       if (angular.isObject(person)) {
@@ -43,6 +45,7 @@ angular.module('activity').
     // Create permanent address if necessary. Return promise for chaining on cash out create.
     $scope.createPermanentAddress = function() {
       var deferred = $q.defer();
+
       if (angular.isObject($scope.cashOut.address)) {
         deferred.resolve($scope.cashOut.address);
 
@@ -50,9 +53,8 @@ angular.module('activity').
         var payload = angular.copy($scope.cashOut.newAddress);
 
         $api.v2.createAddress(payload).then(function(response) {
-          console.log(response);
-
           if (response.success) {
+            $scope.cashOut.address = angular.copy(response.data);
             deferred.resolve(response.data);
           } else {
             $scope.permanentAddressAlert = { type: 'danger', message: response.data.error };
@@ -68,16 +70,27 @@ angular.module('activity').
 
     $scope.createMailingAddress = function() {
       var deferred = $q.defer();
-      if (angular.isObject($scope.cashOut.mailing_address)) {
+
+      debugger
+
+      // Just move on if a check
+      if ($scope.cashOut.type !== 'check') {
+        deferred.resolve();
+
+      // Move on if same as permanent address
+      } else if ($scope.usePermanentAddressAsMailing) {
+        $scope.cashOut.mailing_address = angular.copy($scope.cashOut.address);
+        deferred.resolve();
+
+      } else if (angular.isObject($scope.cashOut.mailing_address)) {
         deferred.resolve($scope.cashOut.mailing_address);
 
       } else if (angular.isObject($scope.cashOut.newMailingAddress)) {
         var payload = angular.copy($scope.cashOut.newMailingAddress);
 
         $api.v2.createAddress(payload).then(function(response) {
-          console.log(response);
-
           if (response.success) {
+            $scope.cashOut.mailing_address = angular.copy(response.data);
             deferred.resolve(response.data);
           } else {
             $scope.mailingAddressAlert = { type: 'danger', message: response.data.error };
@@ -92,35 +105,38 @@ angular.module('activity').
     };
 
     $scope.createCashOut = function() {
-
-      return $scope.createPermanentAddress().then(function() {
-        alert('fuckoff');
-      });
-
       if ($window.confirm('Are you sure?')) {
-        var payload = angular.copy($scope.$parent.cashOut);
+        return $scope.createPermanentAddress().
+          then($scope.createMailingAddress).
+          then(function() {
+            var payload = angular.copy($scope.cashOut);
 
-        return $scope.createPermanentAddress();
+            // Replace address objects with IDs
+            payload.address_id = payload.address.id;
+            if (payload.mailing_address) { payload.mailing_address_id = payload.mailing_address.id; }
 
+            delete payload.address;
+            delete payload.mailing_address;
+            delete payload.newAddress;
+            delete payload.newMailingAddress;
 
-        // Replace address objects with IDs
-        payload.address_id = payload.address.id;
-        payload.mailing_address_id = payload.mailing_address.id;
-        delete payload.address;
-        delete payload.mailing_address;
+            // Remove paypal/bitcoin if wrong type of cash out
+            if (payload.type !== 'paypal') { delete payload.paypal_address; }
+            if (payload.type !== 'bitcoin') { delete payload.bitcoin_address; }
 
-        // Remove paypal/bitcoin if wrong type of cash out
-        if (payload.type !== 'paypal') { delete payload.paypal_address; }
-        if (payload.type !== 'bitcoin') { delete payload.bitcoin_address; }
+            debugger
 
-        $api.v2.createCashOut(payload).then(function(response) {
-          if (response.success) {
-            // Manually reload account balance by fetching current person again
-            $api.load_current_person_from_cookies();
+            $api.v2.createCashOut(payload).then(function(response) {
+              if (response.success) {
+                // Manually reload account balance by fetching current person again
+                $api.load_current_person_from_cookies();
 
-            $location.url('/activity/cash_outs');
-          }
-        });
+                $location.url('/activity/cash_outs');
+              } else {
+                $scope.cashOutAlert = { type: 'danger', message: response.data.error };
+              }
+            });
+          });
       }
     };
 

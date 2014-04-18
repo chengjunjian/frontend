@@ -13,6 +13,10 @@
     </div>
 
     <div class="col-sm-9">
+      <!-- Cash out alerts -->
+      <div ng-if="cashOutAlert.message">
+        <alert type="cashOutAlert.type">{{cashOutAlert.message}}</alert>
+      </div>
 
       <ng-form class="form-horizontal" name="cashOutForm">
         <!-- Payment method -->
@@ -145,37 +149,41 @@
             <label class="control-label col-sm-3">Mailing Address</label>
             <div class="col-sm-9">
               <!-- Error messages -->
-              <div ng-show="$parent.mailingAddressAlert.message">
-                <alert type="$parent.mailingAddressAlert.type">{{$parent.mailingAddressAlert.message}}</alert>
+              <div ng-show="$parent.permanentAddressAlert.message">
+                <alert type="$parent.permanentAddressAlert.type">{{$parent.permanentAddressAlert.message}}</alert>
               </div>
 
               <p class="form-control-static">A mailing address is required if you receive payment via check.</p>
 
-              <div class="checkbox" ng-show="addressManager.addresses.length > 0">
+              <div class="checkbox">
                 <label>
-                  <input type="checkbox" ng-model="usePermanentAddress" /> Use permanent address
+                  <input type="checkbox" ng-model="$parent.$parent.usePermanentAddressAsMailing" /> Use permanent address
                 </label>
               </div>
 
-              <div ng-if="!usePermanentAddress">
+              <div ng-if="!$parent.$parent.usePermanentAddressAsMailing">
                 <br />
 
-                <address-select
-                  class="form-control"
-                  address-manager-instance="addressManager"
-                  ng-model="cashOut.mailing_address"
-                  ng-disabled="toggleNewMailingAddress"
-                  ng-required="!toggleNewMailingAddress">
-                </address-select>
+                <div ng-if="addressManager.addresses.length > 0">
+                  <address-select
+                    class="form-control"
+                    address-manager-instance="addressManager"
+                    ng-model="cashOut.mailing_address"
+                    ng-disabled="toggleNewMailingAddress"
+                    ng-required="!toggleNewMailingAddress">
+                  </address-select>
 
-                <div class="checkbox" ng-show="addressManager.addresses.length > 0">
-                  <label>
-                    <input type="checkbox" ng-model="toggleNewMailingAddress" /> New address
-                  </label>
+                  <div class="checkbox">
+                    <label>
+                      <input type="checkbox" ng-model="$parent.toggleNewMailingAddress" /> New address
+                    </label>
+                  </div>
                 </div>
 
                 <!-- Show new address form if new address box checked -->
-                <div ng-if="toggleNewMailingAddress">
+                <div ng-if="addressManager.addresses.length <= 0 || toggleNewMailingAddress">
+                  <br />
+
                   <ng-form class="form-horizontal" name="newMailingAddressForm">
                     <address-form-input-groups form="newMailingAddressForm" address="cashOut.newMailingAddress"></address-form-input-groups>
                   </ng-form>
@@ -231,7 +239,7 @@
         <!-- Submit cash out request button -->
         <div class="form-group">
           <div class="col-sm-offset-3 col-sm-9">
-            <button class="btn btn-primary"  ng-click="createCashOut()">
+            <button class="btn btn-primary" ng-disabled="cashOutForm.$invalid" ng-click="createCashOut()">
               Request Cash Out
             </button>
           </div>
