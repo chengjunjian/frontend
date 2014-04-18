@@ -18,6 +18,8 @@ angular.module('app').controller('NavbarController', function ($scope, $api, $mo
     $api.signout();
   };
 
+  $scope.setCurrency = $api.setCurrency;
+
   $scope.openDevToolsModal = function() {
     $modal.open({
       templateUrl: 'app/layout/templates/devToolsModal.html',
