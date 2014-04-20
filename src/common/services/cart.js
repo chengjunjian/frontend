@@ -88,6 +88,9 @@ angular.module('services').service('$cart', function($rootScope, $api, $q, $cook
                 // redirect to the provided checkout URL for cart
                 $window.location = response.data.checkout_url;
 
+              } else if (checkout_method === 'coinbase') {
+                $window.location = response.data.checkout_url;
+
               } else if (checkout_method === 'google') {
                 // a JWT is returned, trigger Google Wallet buy
                 $window.google.payments.inapp.buy({
