@@ -110,7 +110,7 @@
                       <form name="form" ng-submit="customPledgeRedirect(form.input.$modelValue)" class="form-inline">
                         <div class="input-group">
                           <span class="input-group-addon">$</span>
-                          <input type="number" name="input" class="form-control" min="5" ng-model="pledge_input" placeholder="Other" tooltip="$5 minimum pledge" tooltip-placement="bottom" toolip-trigger="focus" integer-only>
+                          <input type="number" name="input" class="form-control" min="5" ng-model="pledge_input" placeholder="Other" tooltip="{{5 | dollars}} minimum pledge" tooltip-placement="bottom" toolip-trigger="focus" integer-only>
                         </div>
                       </form>
                     </div>

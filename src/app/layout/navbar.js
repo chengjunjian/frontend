@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('app').controller('NavbarController', function ($scope, $api, $modal, $window, $cookieStore) {
+angular.module('app').controller('NavbarController', function ($scope, $api, $modal, $window, $cookieStore, $currency) {
   $scope.$watch('current_person', function(current_person) {
     if (current_person) {
       $api.person_teams(current_person.id).then(function(teams) {
@@ -18,7 +18,8 @@ angular.module('app').controller('NavbarController', function ($scope, $api, $mo
     $api.signout();
   };
 
-  $scope.setCurrency = $api.setCurrency;
+  // Expose the currency service
+  $scope.$currency = $currency;
 
   $scope.openDevToolsModal = function() {
     $modal.open({
@@ -85,6 +86,7 @@ angular.module('app').controller('NavbarController', function ($scope, $api, $mo
       }
     });
   };
+
 });
 
 angular.module('app').controller('AlertNotificationBar', function ($scope, $location) {

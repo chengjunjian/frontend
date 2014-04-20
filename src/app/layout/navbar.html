@@ -82,11 +82,12 @@
           </ul>
         </li>
 
+        <!-- Currency switcher -->
         <li class="visible-lg visible-md">
           <form class="navbar-form">
             <div class="btn-group">
-              <button type="button" class="btn btn-default" ng-click="setCurrency('USD')">$</button>
-              <button type="button" class="btn btn-default" ng-click="setCurrency('BTC')">฿</button>
+              <button type="button" class="btn" ng-click="$currency.setCurrency('USD')" ng-class="{ 'active btn-info': $currency.value === 'USD', 'btn-default': $currency.value !== 'USD' }">$</button>
+              <button type="button" class="btn" ng-click="$currency.setCurrency('BTC')" ng-class="{ 'active btn-info': $currency.value === 'BTC', 'btn-default': $currency.value !== 'BTC' }">฿</button>
             </div>
           </form>
         </li>

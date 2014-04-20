@@ -1126,37 +1126,4 @@ angular.module('services').service('$api', function($http, $q, $cookieStore, $ro
     }
   };
 
-  this.currency = {
-    current: 'USD'
-  };
-
-  // call this ASAP
-  window.callback_coinbase = function(response) {
-    $api.currency.btc_to_usd_rate = response.amount;
-  };
-  $http.jsonp('https://coinbase.com/api/v1/prices/buy?callback=coinbase');
-
-  this.usd_to_btc = function(amount) {
-    return amount / $api.currency.btc_to_usd_rate;
-  };
-
-  this.currencyFilter = function(input, options) {
-    var currency = $filter('currency');
-    if ($api.currency.current == 'BTC') {
-      input = $api.usd_to_btc(input);
-      return currency(input, (options.space ? '฿ ' : '฿'));
-    } else {
-      return currency(input, (options.space ? '$ ' : '$')).replace(/\.\d\d$/,'');
-    }
-  }
-
-  this.setCurrency = function(value) {
-    if (value === 'BTC') {
-      $api.currency.current = 'BTC';
-    } else {
-      $api.currency.current = 'USD';
-    }
-    console.log("setting currency", $api.currency);
-  };
-
 });
